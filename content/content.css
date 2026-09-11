@@ -22,9 +22,9 @@
 }
 
 #ut-scanner-widget.minimized {
-  width: 60px !important;
-  height: 60px !important;
-  border-radius: 14px !important;
+  width: 84px !important;
+  height: 84px !important;
+  border-radius: 20px !important;
   background: transparent !important;
   box-shadow: none !important;
   border: none !important;
@@ -38,11 +38,11 @@
 }
 
 #ut-scanner-widget.minimized:hover {
-  transform: scale(1.12) translateY(-2px);
+  transform: scale(1.15) translateY(-3px);
 }
 
 #ut-scanner-widget.minimized .ut-widget-header {
-  border-radius: 14px;
+  border-radius: 20px;
   padding: 0 !important;
   width: 100% !important;
   height: 100% !important;
@@ -78,19 +78,19 @@
 }
 
 #ut-scanner-widget.minimized .ut-widget-logo-img {
-  width: 58px !important;
-  height: 58px !important;
-  border-radius: 12px !important;
+  width: 82px !important;
+  height: 82px !important;
+  border-radius: 18px !important;
   box-shadow: none !important;
   border: none !important;
   object-fit: contain !important;
   display: block !important;
-  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.4)) drop-shadow(0 2px 4px rgba(2, 132, 199, 0.35)) !important;
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.45)) drop-shadow(0 3px 6px rgba(2, 132, 199, 0.4)) !important;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 #ut-scanner-widget.minimized:hover .ut-widget-logo-img {
-  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5)) drop-shadow(0 4px 8px rgba(2, 132, 199, 0.5)) !important;
+  filter: drop-shadow(0 14px 26px rgba(0, 0, 0, 0.55)) drop-shadow(0 6px 12px rgba(2, 132, 199, 0.6)) !important;
 }
 
 #ut-scanner-widget .ut-hidden {
