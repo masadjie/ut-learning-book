@@ -620,34 +620,15 @@
     });
   }
 
-  function getCurrentPageTitle(contentDoc) {
-    const headerEl = document.querySelector('.header, header, [class*="header"], [class*="navbar"], [class*="topbar"], .app-header');
-    if (headerEl) {
-      const items = Array.from(headerEl.querySelectorAll('span, div, h1, h2, h3, p'));
-      for (const el of items) {
-        const txt = el.innerText?.trim();
-        if (txt && (/^(Halaman|Modul|Tinjauan|Bab|Kegiatan)/i.test(txt) || (txt.length < 50 && txt.includes('.')))) {
-          if (!txt.includes('Library') && !txt.includes('Menu')) {
-            return txt;
-          }
-        }
-      }
-    }
-
-    const activeToc = document.querySelector('.toc-item.active, .chapter-list li.active, [class*="active"][class*="item"], [class*="active"]');
-    if (activeToc && activeToc.innerText.trim().length > 0 && activeToc.innerText.trim().length < 60) {
-      const t = activeToc.innerText.trim();
-      if (!t.includes('Table of Contents')) return t;
-    }
-
-    if (contentDoc) {
-      const h = contentDoc.querySelector('h1, h2, .chapter-title, .title');
-      if (h && h.innerText?.trim()) {
-        return h.innerText.trim();
-      }
-    }
-
-    return `Halaman ${state.pages.length + 1}`;
+  function generateContentSignature(title, image) {
+    if (!image) return computeHash(title || '');
+    const len = image.length;
+    const s1 = image.slice(100, 300);
+    const s2 = image.slice(Math.floor(len * 0.25), Math.floor(len * 0.25) + 200);
+    const s3 = image.slice(Math.floor(len * 0.50), Math.floor(len * 0.50) + 200);
+    const s4 = image.slice(Math.floor(len * 0.75), Math.floor(len * 0.75) + 200);
+    const s5 = image.slice(-250, -50);
+    return computeHash(`${title || ''}_${len}_${s1}_${s2}_${s3}_${s4}_${s5}`);
   }
 
   async function extractCurrentContent() {
@@ -686,13 +667,15 @@
       }
     }
 
+    const sig = generateContentSignature(title, image);
+
     return {
       title: title || `Halaman ${state.pages.length + 1}`,
       image: image,
       width: imageWidth,
       height: imageHeight,
       timestamp: new Date().toISOString(),
-      hash: computeHash((title || '') + (image ? image.slice(-40) : ''))
+      hash: sig
     };
   }
 
@@ -703,7 +686,7 @@
 
     if (state.pages.length > 0) {
       const lastPage = state.pages[state.pages.length - 1];
-      if (extracted.hash && lastPage.hash === extracted.hash && lastPage.title === extracted.title) {
+      if (extracted.hash && lastPage.hash === extracted.hash) {
         return false;
       }
     }
@@ -715,9 +698,28 @@
     return true;
   }
 
+  function simulateDirectClick(el) {
+    if (!el) return;
+    try {
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+
+      const eventOpts = { bubbles: true, cancelable: true, view: window, clientX: cx, clientY: cy };
+      el.dispatchEvent(new PointerEvent('pointerdown', eventOpts));
+      el.dispatchEvent(new MouseEvent('mousedown', eventOpts));
+      el.dispatchEvent(new PointerEvent('pointerup', eventOpts));
+      el.dispatchEvent(new MouseEvent('mouseup', eventOpts));
+      el.click();
+    } catch (e) {
+      try { el.click(); } catch (err) {}
+    }
+  }
+
   function clickNextButton() {
+    // 1. Direct search for Kotobee Next elements
     const candidates = [
-      ...Array.from(document.querySelectorAll('button, a, div, span, [role="button"]'))
+      ...Array.from(document.querySelectorAll('button, a, div, span, [role="button"], footer *'))
     ];
 
     for (const el of candidates) {
@@ -727,31 +729,35 @@
       const id = (el.id || '').toLowerCase();
       const cls = (typeof el.className === 'string' ? el.className : '').toLowerCase();
 
-      if (text.includes('prev') || title.includes('prev') || cls.includes('prev')) continue;
+      if (text.includes('prev') || title.includes('prev') || cls.includes('prev') || aria.includes('prev')) continue;
 
       if (
-        (text === 'next' || text === 'next >' || text === 'selanjutnya') ||
-        (title === 'next' || title === 'next page') ||
-        (aria === 'next' || aria === 'next page') ||
-        (id === 'next' || id === 'next-btn' || id === 'btn-next' || id === 'btnnext') ||
-        (cls.includes('next-button') || cls.includes('btn-next') || cls.includes('page-next') || cls.includes('nav-next'))
+        (text === 'next' || text === 'next >' || text === 'next>' || text === '>' || text === 'selanjutnya') ||
+        (title === 'next' || title === 'next page' || title === 'halaman selanjutnya') ||
+        (aria === 'next' || aria === 'next page' || aria === 'halaman selanjutnya') ||
+        (id === 'next' || id === 'next-btn' || id === 'btn-next' || id === 'btnnext' || id === 'btn_next') ||
+        (cls.includes('next-button') || cls.includes('btn-next') || cls.includes('page-next') || cls.includes('nav-next') || cls.includes('arrow-next') || cls.includes('chevron-next'))
       ) {
         if (el.offsetParent !== null && !el.disabled) {
-          el.click();
+          simulateDirectClick(el);
+          triggerKeyboardNext();
           return true;
         }
       }
     }
 
-    const bottomNavIcons = document.querySelectorAll('footer [class*="right"], [class*="footer"] [class*="next"], [class*="nav"] [class*="next"], [class*="arrow-right"], [class*="chevron-right"]');
+    // 2. Footer right side navigation icons/buttons
+    const bottomNavIcons = document.querySelectorAll('footer [class*="right"], [class*="footer"] [class*="next"], [class*="nav"] [class*="next"], [class*="arrow-right"], [class*="chevron-right"], [class*="arrow_right"], [class*="chevron_right"]');
     for (const icon of bottomNavIcons) {
       const clickable = icon.closest('button, a, div[role="button"]') || icon;
       if (clickable && clickable.offsetParent !== null) {
-        clickable.click();
+        simulateDirectClick(clickable);
+        triggerKeyboardNext();
         return true;
       }
     }
 
+    // 3. Fallback: Keyboard arrow events
     triggerKeyboardNext();
     return true;
   }
@@ -766,13 +772,18 @@
       cancelable: true
     };
 
+    window.dispatchEvent(new KeyboardEvent('keydown', keyEventOptions));
+    window.dispatchEvent(new KeyboardEvent('keyup', keyEventOptions));
     document.dispatchEvent(new KeyboardEvent('keydown', keyEventOptions));
     document.dispatchEvent(new KeyboardEvent('keyup', keyEventOptions));
 
     document.querySelectorAll('iframe').forEach(iframe => {
       try {
-        const doc = iframe.contentDocument || iframe.contentWindow?.document;
-        if (doc) {
+        const win = iframe.contentWindow;
+        const doc = iframe.contentDocument || win?.document;
+        if (win && doc) {
+          win.dispatchEvent(new KeyboardEvent('keydown', keyEventOptions));
+          win.dispatchEvent(new KeyboardEvent('keyup', keyEventOptions));
           doc.dispatchEvent(new KeyboardEvent('keydown', keyEventOptions));
           doc.dispatchEvent(new KeyboardEvent('keyup', keyEventOptions));
         }
@@ -807,20 +818,21 @@
       return;
     }
 
-    if (!isNew && current && current.hash === state.lastContentHash) {
+    if (!isNew) {
       state.consecutiveSameCount++;
     } else {
       state.consecutiveSameCount = 0;
     }
 
-    if (state.consecutiveSameCount >= 4) {
+    // Allow more resilience (up to 8 consecutive retries before concluding end of book)
+    if (state.consecutiveSameCount >= 8) {
       stopScanning('🏁 Auto-Scan selesai: Sudah mencapai halaman terakhir buku.');
       return;
     }
 
     clickNextButton();
 
-    const delayMs = Math.max(1200, state.delaySeconds * 1000);
+    const delayMs = Math.max(1500, state.delaySeconds * 1000);
     state.timerId = setTimeout(async () => {
       await runScanStep();
     }, delayMs);
