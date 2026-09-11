@@ -328,6 +328,40 @@ class BookExporter {
 
         imageCounter++;
       }
+
+      // Inject Extracted OCR Text if present
+      const ocrContent = page.ocrText || page.text;
+      if (ocrContent && ocrContent.trim()) {
+        const paragraphs = ocrContent.split('\n');
+        for (const p of paragraphs) {
+          const cleanP = p.trim();
+          if (!cleanP) continue;
+
+          const isHeading = cleanP.startsWith('#') || /^[A-Z0-9]\.\s+[A-Z]/i.test(cleanP);
+          const szVal = isHeading ? '24' : '22';
+          const boldXml = isHeading ? '<w:b/>' : '';
+          const colorVal = isHeading ? '0284C7' : '1E293B';
+          const spaceBefore = isHeading ? '140' : '50';
+          const spaceAfter = '50';
+
+          docXmlBody += `
+            <w:p>
+              <w:pPr>
+                <w:spacing w:before="${spaceBefore}" w:after="${spaceAfter}"/>
+              </w:pPr>
+              <w:r>
+                <w:rPr>
+                  <w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/>
+                  ${boldXml}
+                  <w:color w:val="${colorVal}"/>
+                  <w:sz w:val="${szVal}"/>
+                </w:rPr>
+                <w:t xml:space="preserve">${this.escapeXml(cleanP.replace(/^#+\s*/, ''))}</w:t>
+              </w:r>
+            </w:p>
+          `;
+        }
+      }
     }
 
     // 3. word/_rels/document.xml.rels
@@ -359,6 +393,62 @@ ${docRels.join('\n')}
   }
 
   /**
+   * Convert extracted book pages to Clean Structured Markdown
+   * Perfect for Google Gemini, Claude, ChatGPT, and custom LLM prompts
+   */
+  static toMarkdownText(bookData) {
+    const title = bookData.title || 'Modul Universitas Terbuka';
+    let md = `# ${title}\n\n`;
+    md += `> **Universitas Terbuka - Kotobee E-Book Module**  \n`;
+    md += `> Diekstrak dengan UT Book Scanner (Smart OCR v1.1.0) pada: ${bookData.scanDate || new Date().toLocaleString('id-ID')}  \n`;
+    md += `> URL: ${bookData.url || 'univterbuka.kotobee.com'}\n\n---\n\n`;
+
+    bookData.pages.forEach((page, idx) => {
+      const pageTitle = page.title || `Halaman ${idx + 1}`;
+      md += `## Bagian ${idx + 1}: ${pageTitle}\n\n`;
+      const text = page.ocrText || page.text;
+      if (text && text.trim()) {
+        md += `${text.trim()}\n\n`;
+      } else {
+        md += `*(Tangkapan visual halaman terlampir di file dokumen)*\n\n`;
+      }
+      md += `---\n\n`;
+    });
+    return md;
+  }
+
+  /**
+   * Copy all extracted OCR texts to clipboard (LLM ready)
+   */
+  static async copyOCRToClipboard(bookData) {
+    const md = this.toMarkdownText(bookData);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(md);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = md;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+  }
+
+  /**
+   * Download OCR Markdown file
+   */
+  static downloadOCRMarkdown(bookData, customFilename) {
+    const md = this.toMarkdownText(bookData);
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+    const rawTitle = customFilename || bookData.title || 'Modul_UT';
+    const safeTitle = rawTitle.replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().replace(/\s+/g, '_');
+    this.downloadFile(blob, `${safeTitle}_OCR.md`);
+  }
+
+  /**
    * Export to Direct PDF via Native Browser Print Window
    * Opens high-resolution landscape printable page and triggers print / Save to PDF
    */
@@ -368,6 +458,7 @@ ${docRels.join('\n')}
       <div class="pdf-page">
         <div class="pdf-header">${this.escapeXml(p.title || `Halaman ${idx + 1}`)}</div>
         ${p.image ? `<img src="${p.image}" class="pdf-img" alt="Halaman ${idx + 1}">` : ''}
+        ${p.ocrText ? `<div style="font-size: 11pt; line-height: 1.5; color: #1e293b; margin-top: 10px; width: 100%; white-space: pre-wrap;">${this.escapeXml(p.ocrText)}</div>` : ''}
       </div>
     `).join('');
 
@@ -376,7 +467,7 @@ ${docRels.join('\n')}
       <html>
       <head>
         <meta charset="utf-8">
-        <title>${this.escapeXml(title)} - UT Book Scanner v1.0.0</title>
+        <title>${this.escapeXml(title)} - UT Book Scanner v1.1.0</title>
         <style>
           @page {
             size: A4 landscape;

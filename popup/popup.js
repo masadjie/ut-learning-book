@@ -12,12 +12,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   const delayDisplay = document.getElementById('delay-display');
   const maxPagesSelect = document.getElementById('max-pages-select');
   const maxPagesCustomInput = document.getElementById('max-pages-custom-input');
+
+  const tabBtnScan = document.getElementById('tab-btn-scan');
+  const tabBtnOcr = document.getElementById('tab-btn-ocr');
+  const paneScan = document.getElementById('pane-scan');
+  const paneOcr = document.getElementById('pane-ocr');
+
   const btnStart = document.getElementById('btn-start');
+  const btnStartOcr = document.getElementById('btn-start-ocr');
   const btnStop = document.getElementById('btn-stop');
   const btnCapture = document.getElementById('btn-capture');
+  const btnCaptureOcr = document.getElementById('btn-capture-ocr');
   const btnClear = document.getElementById('btn-clear');
   const btnExportDoc = document.getElementById('btn-export-doc');
+  const btnExportDocOcr = document.getElementById('btn-export-doc-ocr');
   const btnExportPdf = document.getElementById('btn-export-pdf');
+  const btnCopyOcr = document.getElementById('btn-copy-ocr');
+  const btnDownloadMd = document.getElementById('btn-download-md');
+
+  const popupOcrWords = document.getElementById('popup-ocr-words');
+  const popupOcrChars = document.getElementById('popup-ocr-chars');
   const previewList = document.getElementById('preview-list');
 
   let currentBookData = {
@@ -26,8 +40,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     pages: [],
     isScanning: false,
     delaySeconds: 2.5,
-    maxPages: 15
+    maxPages: 15,
+    totalChars: 0,
+    totalWords: 0,
+    activeTab: 'scan'
   };
+
+  function switchTab(tab) {
+    currentBookData.activeTab = tab;
+    if (tab === 'scan') {
+      tabBtnScan.classList.add('active');
+      tabBtnOcr.classList.remove('active');
+      paneScan.classList.add('active');
+      paneOcr.classList.remove('active');
+    } else {
+      tabBtnScan.classList.remove('active');
+      tabBtnOcr.classList.add('active');
+      paneScan.classList.remove('active');
+      paneOcr.classList.add('active');
+    }
+  }
+
+  tabBtnScan.addEventListener('click', () => switchTab('scan'));
+  tabBtnOcr.addEventListener('click', () => switchTab('ocr'));
 
   async function getActiveTab() {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -53,6 +88,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (tabRes.pages) currentBookData.pages = tabRes.pages;
       if (tabRes.delaySeconds) currentBookData.delaySeconds = tabRes.delaySeconds;
       if (typeof tabRes.maxPages === 'number') currentBookData.maxPages = tabRes.maxPages;
+      if (typeof tabRes.totalChars === 'number') currentBookData.totalChars = tabRes.totalChars;
+      if (typeof tabRes.totalWords === 'number') currentBookData.totalWords = tabRes.totalWords;
+      if (tabRes.activeTab) switchTab(tabRes.activeTab);
     }
 
     updateUI();
@@ -61,6 +99,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   function updateUI() {
     bookTitleEl.textContent = currentBookData.title || 'Modul UT (Kotobee)';
     pageCountEl.textContent = `${currentBookData.pages.length} Bagian`;
+
+    if (popupOcrWords) popupOcrWords.textContent = (currentBookData.totalWords || 0).toLocaleString('id-ID');
+    if (popupOcrChars) popupOcrChars.textContent = (currentBookData.totalChars || 0).toLocaleString('id-ID');
 
     if (docLabelInput) {
       if (currentBookData.customLabel) {
@@ -91,11 +132,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       statusBadge.textContent = 'SCANNING';
       statusBadge.className = 'badge scanning';
       btnStart.style.display = 'none';
+      if (btnStartOcr) btnStartOcr.style.display = 'none';
       btnStop.style.display = 'flex';
     } else {
       statusBadge.textContent = 'IDLE';
       statusBadge.className = 'badge idle';
       btnStart.style.display = 'flex';
+      if (btnStartOcr) btnStartOcr.style.display = 'flex';
       btnStop.style.display = 'none';
     }
 
@@ -106,9 +149,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       currentBookData.pages.forEach((p, idx) => {
         const item = document.createElement('div');
         item.className = 'preview-item';
+        const charLen = (p.ocrText || p.text || '').length;
+        const ocrTag = charLen > 0 ? `<span style="font-size: 9.5px; color: #0284c7; margin-left: auto; font-weight: 600;">${charLen} char</span>` : '';
         item.innerHTML = `
           <span class="preview-index">#${idx + 1}</span>
           <span class="preview-title">${p.title || 'Bagian Modul'}</span>
+          ${ocrTag}
         `;
         previewList.appendChild(item);
       });
@@ -143,7 +189,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     currentBookData.delaySeconds = val;
   });
 
-  btnStart.addEventListener('click', async () => {
+  const startScanAction = async () => {
     const delay = parseFloat(delayInput.value);
     let maxPages = 15;
     if (maxPagesSelect.value === 'custom') {
@@ -156,7 +202,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     await sendTabMessage({ action: 'START_SCAN', delay, maxPages, customLabel });
     currentBookData.isScanning = true;
     updateUI();
-  });
+  };
+
+  btnStart.addEventListener('click', startScanAction);
+  if (btnStartOcr) btnStartOcr.addEventListener('click', startScanAction);
 
   btnStop.addEventListener('click', async () => {
     await sendTabMessage({ action: 'STOP_SCAN' });
@@ -164,14 +213,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateUI();
   });
 
-  btnCapture.addEventListener('click', async () => {
+  const captureAction = async () => {
     const res = await sendTabMessage({ action: 'CAPTURE_NOW' });
     if (res && res.success) {
       await refreshState();
     } else {
       alert('Gagal mengambil screenshot. Pastikan tab Kotobee aktif.');
     }
-  });
+  };
+
+  btnCapture.addEventListener('click', captureAction);
+  if (btnCaptureOcr) btnCaptureOcr.addEventListener('click', captureAction);
 
   btnClear.addEventListener('click', async () => {
     if (confirm('Hapus seluruh data materi yang sudah discan?')) {
@@ -186,7 +238,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     return labelVal || currentBookData.customLabel || currentBookData.title || 'Modul Universitas Terbuka';
   }
 
-  btnExportDoc.addEventListener('click', async () => {
+  const exportDocAction = async () => {
     if (currentBookData.pages.length === 0) {
       alert('Belum ada materi yang discan!');
       return;
@@ -199,7 +251,47 @@ document.addEventListener('DOMContentLoaded', async () => {
     const blob = await BookExporter.toDocxBlob(payload);
     const safeTitle = finalTitle.replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().replace(/\s+/g, '_') || 'Modul_UT';
     BookExporter.downloadFile(blob, `${safeTitle}.docx`);
-  });
+  };
+
+  btnExportDoc.addEventListener('click', exportDocAction);
+  if (btnExportDocOcr) btnExportDocOcr.addEventListener('click', exportDocAction);
+
+  if (btnCopyOcr) {
+    btnCopyOcr.addEventListener('click', async () => {
+      if (currentBookData.pages.length === 0) {
+        alert('Belum ada materi/OCR yang discan!');
+        return;
+      }
+      const finalTitle = getExportTitle();
+      const payload = {
+        title: finalTitle,
+        pages: currentBookData.pages
+      };
+      await BookExporter.copyOCRToClipboard(payload);
+      const originalText = btnCopyOcr.textContent;
+      btnCopyOcr.textContent = '✅ Teks OCR Berhasil Disalin!';
+      btnCopyOcr.style.background = '#10b981';
+      setTimeout(() => {
+        btnCopyOcr.textContent = originalText;
+        btnCopyOcr.style.background = '';
+      }, 2500);
+    });
+  }
+
+  if (btnDownloadMd) {
+    btnDownloadMd.addEventListener('click', () => {
+      if (currentBookData.pages.length === 0) {
+        alert('Belum ada materi/OCR yang discan!');
+        return;
+      }
+      const finalTitle = getExportTitle();
+      const payload = {
+        title: finalTitle,
+        pages: currentBookData.pages
+      };
+      BookExporter.downloadOCRMarkdown(payload, finalTitle);
+    });
+  }
 
   btnExportPdf.addEventListener('click', () => {
     if (currentBookData.pages.length === 0) {

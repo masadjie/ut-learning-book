@@ -463,6 +463,113 @@ body.ut-dragging {
   background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
 }
 
+.ut-tabs-nav {
+  display: flex;
+  background: #e2e8f0;
+  border-radius: 10px;
+  padding: 3px;
+  margin-bottom: 12px;
+  gap: 4px;
+}
+
+.ut-tab-btn {
+  flex: 1;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.ut-tab-btn:hover {
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.ut-tab-btn.active {
+  background: #ffffff;
+  color: #0284c7;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.ut-tab-pane {
+  display: none;
+  animation: ut-pane-fade 0.2s ease-in-out;
+}
+
+.ut-tab-pane.active {
+  display: block;
+}
+
+@keyframes ut-pane-fade {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ut-ocr-preview-box {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #334155;
+  max-height: 90px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin-bottom: 10px;
+  user-select: text !important;
+}
+
+.ut-ocr-preview-box::-webkit-scrollbar {
+  width: 4px;
+}
+
+.ut-ocr-preview-box::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.ut-ocr-stats {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.ut-ocr-stat-chip {
+  flex: 1;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 4px 6px;
+  text-align: center;
+}
+
+.ut-ocr-stat-chip .val {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0284c7;
+  display: block;
+}
+
+.ut-ocr-stat-chip .lbl {
+  font-size: 9.5px;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
 .ut-toast {
   position: fixed;
   top: 20px;
@@ -484,3 +591,4 @@ body.ut-dragging {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+

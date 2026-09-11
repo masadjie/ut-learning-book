@@ -11,11 +11,13 @@
   // Scanner state (kept in-memory for lightning-fast performance without storage lagging)
   let state = {
     isScanning: false,
+    activeTab: 'scan', // 'scan' | 'ocr'
     delaySeconds: 2.5,
     maxPages: 15, // 0 = unlimited, 5, 10, 15, 25, 50
     scanMode: 'screenshot',
     bookTitle: '',
-    pages: [], // [{ pageNum, title, image, width, height, timestamp, hash }]
+    customLabel: '',
+    pages: [], // [{ pageNum, title, image, ocrText, text, width, height, timestamp, hash }]
     lastContentHash: '',
     consecutiveSameCount: 0,
     timerId: null
@@ -73,7 +75,7 @@
             ${logoSrc ? `<img src="${logoSrc}" class="ut-widget-logo-img" alt="Logo">` : '📖'}
           </div>
           <div class="ut-widget-text-group">
-            <div class="ut-widget-title">UT Book Scanner <span style="font-size: 10px; opacity: 0.85; font-weight: 500;">v1.0.0</span></div>
+            <div class="ut-widget-title">UT Book Scanner <span style="font-size: 10px; opacity: 0.85; font-weight: 500;">v1.1.0</span></div>
             <div style="font-size: 10px; opacity: 0.85; font-weight: 400;">by Adjie Kurniawan</div>
           </div>
         </div>
@@ -82,6 +84,12 @@
         </div>
       </div>
       <div class="ut-widget-body">
+        <!-- Dual Tab Switcher -->
+        <div class="ut-tabs-nav" id="ut-tabs-nav">
+          <button class="ut-tab-btn active" data-tab="scan" id="ut-tab-btn-scan">📸 Scan Pages</button>
+          <button class="ut-tab-btn" data-tab="ocr" id="ut-tab-btn-ocr">📝 Pages to OCR</button>
+        </div>
+
         <div class="ut-status-card">
           <div class="ut-status-row">
             <span class="ut-status-label">Status:</span>
@@ -101,65 +109,112 @@
           </div>
         </div>
 
-        <div class="ut-form-group">
-          <label for="ut-doc-label" class="ut-form-label">
-            <span>🏷️ Nama Label / Judul File:</span>
-          </label>
-          <div class="ut-input-wrapper">
-            <input type="text" id="ut-doc-label" class="ut-text-input" placeholder="Contoh: Modul 1 - Matriks" value="" autocomplete="off" spellcheck="false" style="padding-left: 14px !important; padding-right: 14px !important; text-indent: 0 !important;">
+        <!-- Tab 1: Scan Pages -->
+        <div class="ut-tab-pane active" id="ut-pane-scan">
+          <div class="ut-form-group">
+            <label for="ut-doc-label" class="ut-form-label">
+              <span>🏷️ Nama Label / Judul File:</span>
+            </label>
+            <div class="ut-input-wrapper">
+              <input type="text" id="ut-doc-label" class="ut-text-input" placeholder="Contoh: Modul 1 - Matriks" value="" autocomplete="off" spellcheck="false" style="padding-left: 14px !important; padding-right: 14px !important; text-indent: 0 !important;">
+            </div>
           </div>
-        </div>
 
-        <div class="ut-form-group">
-          <label for="ut-max-pages" class="ut-form-label">
-            <span>🎯 Batas Halaman (Auto-Stop):</span>
-          </label>
-          <div class="ut-select-wrapper">
-            <select id="ut-max-pages" class="ut-select">
-              <option value="5">Maksimal 5 Halaman</option>
-              <option value="10">Maksimal 10 Halaman</option>
-              <option value="15" selected>Maksimal 15 Halaman (Direkomendasikan)</option>
-              <option value="25">Maksimal 25 Halaman</option>
-              <option value="50">Maksimal 50 Halaman</option>
-              <option value="0">Semua Halaman (Tanpa Batas)</option>
-              <option value="custom">✏️ Kustom / Tentukan Manual...</option>
-            </select>
-            <input type="number" id="ut-max-pages-custom" class="ut-text-input ut-hidden" min="1" max="1000" placeholder="Ketik jumlah halaman (misal: 12)" style="margin-top: 6px; display: none; padding-left: 14px !important; padding-right: 14px !important;">
+          <div class="ut-form-group">
+            <label for="ut-max-pages" class="ut-form-label">
+              <span>🎯 Batas Halaman (Auto-Stop):</span>
+            </label>
+            <div class="ut-select-wrapper">
+              <select id="ut-max-pages" class="ut-select">
+                <option value="5">Maksimal 5 Halaman</option>
+                <option value="10">Maksimal 10 Halaman</option>
+                <option value="15" selected>Maksimal 15 Halaman (Direkomendasikan)</option>
+                <option value="25">Maksimal 25 Halaman</option>
+                <option value="50">Maksimal 50 Halaman</option>
+                <option value="0">Semua Halaman (Tanpa Batas)</option>
+                <option value="custom">✏️ Kustom / Tentukan Manual...</option>
+              </select>
+              <input type="number" id="ut-max-pages-custom" class="ut-text-input ut-hidden" min="1" max="1000" placeholder="Ketik jumlah halaman (misal: 12)" style="margin-top: 6px; display: none; padding-left: 14px !important; padding-right: 14px !important;">
+            </div>
           </div>
-        </div>
 
-        <div class="ut-form-group">
-          <div class="ut-form-label-row">
-            <span class="ut-form-label" style="margin-bottom: 0;">⏱️ Kecepatan Jeda (Delay):</span>
-            <span id="ut-delay-val" class="ut-badge-delay">2.5s</span>
+          <div class="ut-form-group">
+            <div class="ut-form-label-row">
+              <span class="ut-form-label" style="margin-bottom: 0;">⏱️ Kecepatan Jeda (Delay):</span>
+              <span id="ut-delay-val" class="ut-badge-delay">2.5s</span>
+            </div>
+            <input type="range" id="ut-delay-slider" class="ut-slider-input" min="1.0" max="6.0" step="0.5" value="2.5">
           </div>
-          <input type="range" id="ut-delay-slider" class="ut-slider-input" min="1.0" max="6.0" step="0.5" value="2.5">
-        </div>
 
-        <div class="ut-actions-grid">
-          <button class="ut-btn ut-btn-success ut-btn-full" id="ut-btn-start">
-            ▶️ Mulai Auto-Scan
-          </button>
-          <button class="ut-btn ut-btn-danger" id="ut-btn-stop" style="display: none;">
-            ⏹️ Stop Scan
-          </button>
-          <button class="ut-btn ut-btn-secondary" id="ut-btn-capture">
-            📸 Scan Halaman Ini
-          </button>
-          <button class="ut-btn ut-btn-secondary" id="ut-btn-clear" title="Hapus data terkumpul">
-            🗑️ Reset
-          </button>
-        </div>
-
-        <div class="ut-export-section">
-          <div class="ut-export-label">Ekspor Dokumen (Landscape HD)</div>
-          <div class="ut-export-btns">
-            <button class="ut-btn ut-btn-primary" id="ut-btn-export-doc">
-              📄 Word (.docx)
+          <div class="ut-actions-grid">
+            <button class="ut-btn ut-btn-success ut-btn-full" id="ut-btn-start">
+              ▶️ Mulai Auto-Scan
             </button>
-            <button class="ut-btn ut-btn-secondary" id="ut-btn-export-pdf">
-              📑 Cetak / PDF
+            <button class="ut-btn ut-btn-danger" id="ut-btn-stop" style="display: none;">
+              ⏹️ Stop Scan
             </button>
+            <button class="ut-btn ut-btn-secondary" id="ut-btn-capture">
+              📸 Scan Halaman Ini
+            </button>
+            <button class="ut-btn ut-btn-secondary" id="ut-btn-clear" title="Hapus data terkumpul">
+              🗑️ Reset
+            </button>
+          </div>
+
+          <div class="ut-export-section">
+            <div class="ut-export-label">Ekspor Dokumen (Landscape HD)</div>
+            <div class="ut-export-btns">
+              <button class="ut-btn ut-btn-primary" id="ut-btn-export-doc">
+                📄 Word (.docx)
+              </button>
+              <button class="ut-btn ut-btn-secondary" id="ut-btn-export-pdf">
+                📑 Cetak / PDF
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Pages to OCR -->
+        <div class="ut-tab-pane" id="ut-pane-ocr">
+          <div class="ut-ocr-stats">
+            <div class="ut-ocr-stat-chip">
+              <span class="val" id="ut-ocr-total-words">0</span>
+              <span class="lbl">Total Kata</span>
+            </div>
+            <div class="ut-ocr-stat-chip">
+              <span class="val" id="ut-ocr-total-chars">0</span>
+              <span class="lbl">Total Karakter</span>
+            </div>
+          </div>
+
+          <div style="font-size: 11px; font-weight: 600; color: #475569; margin-bottom: 4px; display: flex; justify-content: space-between;">
+            <span>Preview Teks OCR Terakhir:</span>
+            <span id="ut-ocr-engine-tag" style="color: #0284c7; font-size: 10px; font-weight: 700;">Smart DOM OCR</span>
+          </div>
+          <div class="ut-ocr-preview-box" id="ut-ocr-preview-text">Belum ada teks yang diekstraksi. Mulai Auto-Scan atau klik "Scan & OCR Halaman Ini".</div>
+
+          <div class="ut-actions-grid" style="margin-bottom: 8px;">
+            <button class="ut-btn ut-btn-llm ut-btn-full" id="ut-btn-copy-ocr" title="Salin seluruh teks hasil OCR untuk dimasukkan ke Google Gemini / Claude / ChatGPT">
+              📋 Salin Teks OCR (LLM Ready)
+            </button>
+            <button class="ut-btn ut-btn-success" id="ut-btn-start-ocr">
+              ▶️ Auto-Scan OCR
+            </button>
+            <button class="ut-btn ut-btn-secondary" id="ut-btn-capture-ocr">
+              📝 OCR Halaman Ini
+            </button>
+          </div>
+
+          <div class="ut-export-section">
+            <div class="ut-export-label">Ekspor OCR & Dokumen</div>
+            <div class="ut-export-btns">
+              <button class="ut-btn ut-btn-primary" id="ut-btn-export-doc-ocr" title="Word dengan Gambar + Format Teks OCR">
+                📄 Word + OCR
+              </button>
+              <button class="ut-btn ut-btn-secondary" id="ut-btn-download-md" title="Unduh format Markdown (.md)">
+                📝 Unduh .md
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -173,18 +228,48 @@
 
   // Attach button and slider event listeners
   function attachWidgetListeners(widget) {
+    const tabBtnScan = widget.querySelector('#ut-tab-btn-scan');
+    const tabBtnOcr = widget.querySelector('#ut-tab-btn-ocr');
+    const paneScan = widget.querySelector('#ut-pane-scan');
+    const paneOcr = widget.querySelector('#ut-pane-ocr');
+
     const btnStart = widget.querySelector('#ut-btn-start');
+    const btnStartOcr = widget.querySelector('#ut-btn-start-ocr');
     const btnStop = widget.querySelector('#ut-btn-stop');
     const btnCapture = widget.querySelector('#ut-btn-capture');
+    const btnCaptureOcr = widget.querySelector('#ut-btn-capture-ocr');
     const btnClear = widget.querySelector('#ut-btn-clear');
     const btnExportDoc = widget.querySelector('#ut-btn-export-doc');
+    const btnExportDocOcr = widget.querySelector('#ut-btn-export-doc-ocr');
     const btnExportPdf = widget.querySelector('#ut-btn-export-pdf');
+    const btnCopyOcr = widget.querySelector('#ut-btn-copy-ocr');
+    const btnDownloadMd = widget.querySelector('#ut-btn-download-md');
+
     const btnMin = widget.querySelector('#ut-btn-minimize');
     const delaySlider = widget.querySelector('#ut-delay-slider');
     const delayVal = widget.querySelector('#ut-delay-val');
     const maxPagesSelect = widget.querySelector('#ut-max-pages');
     const maxPagesCustom = widget.querySelector('#ut-max-pages-custom');
     const docLabelInput = widget.querySelector('#ut-doc-label');
+
+    // Tab switcher logic
+    function switchTab(tab) {
+      state.activeTab = tab;
+      if (tab === 'scan') {
+        tabBtnScan.classList.add('active');
+        tabBtnOcr.classList.remove('active');
+        paneScan.classList.add('active');
+        paneOcr.classList.remove('active');
+      } else {
+        tabBtnScan.classList.remove('active');
+        tabBtnOcr.classList.add('active');
+        paneScan.classList.remove('active');
+        paneOcr.classList.add('active');
+      }
+    }
+
+    tabBtnScan.addEventListener('click', () => switchTab('scan'));
+    tabBtnOcr.addEventListener('click', () => switchTab('ocr'));
 
     // Default placeholder label if book title is known
     if (state.bookTitle && !state.customLabel) {
@@ -225,7 +310,7 @@
       btnMin.textContent = widget.classList.contains('minimized') ? '⤢' : '−';
     });
 
-    btnStart.addEventListener('click', () => {
+    const triggerStart = () => {
       if (maxPagesSelect.value === 'custom') {
         const customVal = parseInt(maxPagesCustom.value, 10);
         state.maxPages = (customVal > 0) ? customVal : 15;
@@ -234,23 +319,29 @@
       }
       state.customLabel = docLabelInput.value;
       startScanning();
-    });
+    };
+
+    btnStart.addEventListener('click', triggerStart);
+    btnStartOcr.addEventListener('click', triggerStart);
 
     btnStop.addEventListener('click', () => {
       stopScanning('Scan dihentikan oleh pengguna.');
     });
 
-    btnCapture.addEventListener('click', async () => {
+    const triggerCapture = async () => {
       state.customLabel = docLabelInput.value;
-      showToast('📸 Mengambil tangkapan halaman...');
+      showToast('📸 Mengambil tangkapan & OCR halaman...');
       const extracted = await extractCurrentContent();
       if (extracted && (extracted.image || (extracted.text && extracted.text.length > 5))) {
         addPageIfNew(extracted);
         showToast(`✅ Tersimpan: ${extracted.title || 'Halaman saat ini'}`);
       } else {
-        showToast('⚠️ Gagal mengambil screenshot.', 3000);
+        showToast('⚠️ Gagal mengambil halaman.', 3000);
       }
-    });
+    };
+
+    btnCapture.addEventListener('click', triggerCapture);
+    btnCaptureOcr.addEventListener('click', triggerCapture);
 
     btnClear.addEventListener('click', () => {
       if (confirm('Apakah Anda yakin ingin menghapus data materi yang sudah terkumpul?')) {
@@ -262,7 +353,7 @@
       }
     });
 
-    btnExportDoc.addEventListener('click', async () => {
+    const triggerExportDoc = async () => {
       if (state.pages.length === 0) {
         showToast('⚠️ Belum ada materi yang discan!');
         return;
@@ -280,6 +371,32 @@
         console.error('Docx export error:', err);
         showToast('Gagal generate docx, periksa konsol browser.');
       }
+    };
+
+    btnExportDoc.addEventListener('click', triggerExportDoc);
+    btnExportDocOcr.addEventListener('click', triggerExportDoc);
+
+    btnCopyOcr.addEventListener('click', async () => {
+      if (state.pages.length === 0) {
+        showToast('⚠️ Belum ada materi/OCR yang discan!');
+        return;
+      }
+      try {
+        await BookExporter.copyOCRToClipboard(getBookPayload());
+        showToast('📋 Teks OCR berhasil disalin! Siap dimasukkan ke Google LLM.');
+      } catch (e) {
+        showToast('Gagal menyalin teks OCR.');
+      }
+    });
+
+    btnDownloadMd.addEventListener('click', () => {
+      if (state.pages.length === 0) {
+        showToast('⚠️ Belum ada materi/OCR yang discan!');
+        return;
+      }
+      state.customLabel = docLabelInput.value;
+      BookExporter.downloadOCRMarkdown(getBookPayload(), state.customLabel);
+      showToast('📝 Berhasil mengunduh format Markdown (.md)');
     });
 
     btnExportPdf.addEventListener('click', () => {
@@ -403,6 +520,17 @@
     }, duration);
   }
 
+  function calculateTotalOCRStats() {
+    let totalChars = 0;
+    let totalWords = 0;
+    state.pages.forEach(p => {
+      const text = p.ocrText || p.text || '';
+      totalChars += text.length;
+      totalWords += text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
+    });
+    return { totalChars, totalWords };
+  }
+
   function updateWidgetUI() {
     const widget = document.getElementById('ut-scanner-widget');
     if (!widget) return;
@@ -411,38 +539,60 @@
     const pageCount = widget.querySelector('#ut-page-count');
     const currentSection = widget.querySelector('#ut-current-section');
     const btnStart = widget.querySelector('#ut-btn-start');
+    const btnStartOcr = widget.querySelector('#ut-btn-start-ocr');
     const btnStop = widget.querySelector('#ut-btn-stop');
+    const ocrTotalWords = widget.querySelector('#ut-ocr-total-words');
+    const ocrTotalChars = widget.querySelector('#ut-ocr-total-chars');
+    const ocrPreviewText = widget.querySelector('#ut-ocr-preview-text');
 
     pageCount.textContent = `${state.pages.length} Bagian`;
+
+    const { totalChars, totalWords } = calculateTotalOCRStats();
+    if (ocrTotalWords) ocrTotalWords.textContent = totalWords.toLocaleString('id-ID');
+    if (ocrTotalChars) ocrTotalChars.textContent = totalChars.toLocaleString('id-ID');
 
     if (state.pages.length > 0) {
       const last = state.pages[state.pages.length - 1];
       currentSection.textContent = last.title || `Halaman ${state.pages.length}`;
+      if (ocrPreviewText) {
+        const text = (last.ocrText || last.text || '').trim();
+        ocrPreviewText.textContent = text ? text.slice(0, 350) + (text.length > 350 ? '...' : '') : '*(Halaman berupa gambar/diagram visual)*';
+      }
     } else {
       currentSection.textContent = '-';
+      if (ocrPreviewText) {
+        ocrPreviewText.textContent = 'Belum ada teks yang diekstraksi. Mulai Auto-Scan atau klik "Scan & OCR Halaman Ini".';
+      }
     }
 
     if (state.isScanning) {
       badgeStatus.textContent = 'SCANNING...';
       badgeStatus.className = 'ut-status-badge scanning';
-      btnStart.style.display = 'none';
-      btnStop.style.display = 'flex';
-      btnStop.textContent = '⏹️ Stop Scan';
+      if (btnStart) btnStart.style.display = 'none';
+      if (btnStartOcr) btnStartOcr.style.display = 'none';
+      if (btnStop) {
+        btnStop.style.display = 'flex';
+        btnStop.textContent = '⏹️ Stop Scan';
+      }
     } else {
       badgeStatus.textContent = 'IDLE';
       badgeStatus.className = 'ut-status-badge idle';
-      btnStart.style.display = 'flex';
-      btnStop.style.display = 'none';
+      if (btnStart) btnStart.style.display = 'flex';
+      if (btnStartOcr) btnStartOcr.style.display = 'flex';
+      if (btnStop) btnStop.style.display = 'none';
     }
   }
 
   // Lightweight state notification (does NOT serialize large images to prevent lagging!)
   function saveState() {
+    const { totalChars, totalWords } = calculateTotalOCRStats();
     chrome.runtime.sendMessage({
       action: 'STATE_UPDATED',
       count: state.pages.length,
       isScanning: state.isScanning,
-      bookTitle: state.bookTitle
+      bookTitle: state.bookTitle,
+      totalChars,
+      totalWords
     }).catch(() => {});
   }
 
@@ -536,6 +686,86 @@
       return canvas.toDataURL('image/jpeg', 0.80);
     } catch (e) {
       return null;
+    }
+  }
+
+  // Extract High-Precision Structured OCR Text from Kotobee reader DOM
+  function extractStructuredOCRText(contentDoc) {
+    if (!contentDoc) return '';
+
+    try {
+      // Find the page container
+      const root = contentDoc.querySelector('.book-page, .page-content, #book-page, .epub-container, [class*="page"], body') || contentDoc.body;
+      if (!root) return '';
+
+      // Clone node to safely sanitize without affecting display
+      const clone = root.cloneNode(true);
+
+      // Remove non-content elements (scripts, styles, controls, headers/footers, watermarks)
+      const unwanted = clone.querySelectorAll('script, style, noscript, svg, button, .controls, .nav, .reader-nav, [class*="watermark"], [class*="page-number"]');
+      unwanted.forEach(el => el.remove());
+
+      const blocks = [];
+      
+      // Extract structural blocks
+      const structuralElements = clone.querySelectorAll('h1, h2, h3, h4, h5, h6, p, li, tr, blockquote, pre');
+      
+      if (structuralElements.length > 0) {
+        structuralElements.forEach(el => {
+          const tag = el.tagName.toLowerCase();
+          const text = el.innerText?.trim();
+          if (!text) return;
+
+          // Prevent duplicating parent-child text
+          if (el.querySelector('p, li, h1, h2, h3, h4, h5, h6')) return;
+
+          if (tag === 'h1') {
+            blocks.push(`\n# ${text}\n`);
+          } else if (tag === 'h2') {
+            blocks.push(`\n## ${text}\n`);
+          } else if (tag === 'h3') {
+            blocks.push(`\n### ${text}\n`);
+          } else if (tag === 'h4' || tag === 'h5' || tag === 'h6') {
+            blocks.push(`\n#### ${text}\n`);
+          } else if (tag === 'li') {
+            blocks.push(`- ${text}`);
+          } else if (tag === 'tr') {
+            const cells = Array.from(el.querySelectorAll('th, td')).map(c => c.innerText?.trim() || '');
+            if (cells.length > 0) {
+              blocks.push(`| ${cells.join(' | ')} |`);
+            }
+          } else if (tag === 'blockquote') {
+            blocks.push(`> ${text}\n`);
+          } else {
+            blocks.push(text);
+          }
+        });
+      }
+
+      let resultText = blocks.join('\n\n').trim();
+
+      // If structured elements yielded little text, fallback to body innerText with newline cleanup
+      if (resultText.length < 20 && clone.innerText && clone.innerText.trim().length > 0) {
+        resultText = clone.innerText
+          .replace(/\r\n/g, '\n')
+          .replace(/\n{3,}/g, '\n\n')
+          .replace(/[ \t]+/g, ' ')
+          .trim();
+      }
+
+      // Fallback: Check for image alt/aria text if page is an image module
+      if (!resultText || resultText.length < 10) {
+        const altImages = clone.querySelectorAll('img[alt], [aria-label]');
+        const alts = Array.from(altImages).map(img => img.getAttribute('alt') || img.getAttribute('aria-label')).filter(Boolean);
+        if (alts.length > 0) {
+          resultText = alts.join('\n\n');
+        }
+      }
+
+      return resultText;
+    } catch (e) {
+      console.warn('OCR extraction error:', e);
+      return '';
     }
   }
 
@@ -650,15 +880,16 @@
     return `Halaman ${state.pages.length + 1}`;
   }
 
-  function generateContentSignature(title, image) {
-    if (!image) return computeHash(title || '');
+  function generateContentSignature(title, image, ocrText = '') {
+    if (!image) return computeHash(`${title || ''}_${ocrText.slice(0, 100)}`);
     const len = image.length;
     const s1 = image.slice(100, 300);
     const s2 = image.slice(Math.floor(len * 0.25), Math.floor(len * 0.25) + 200);
     const s3 = image.slice(Math.floor(len * 0.50), Math.floor(len * 0.50) + 200);
     const s4 = image.slice(Math.floor(len * 0.75), Math.floor(len * 0.75) + 200);
     const s5 = image.slice(-250, -50);
-    return computeHash(`${title || ''}_${len}_${s1}_${s2}_${s3}_${s4}_${s5}`);
+    const ocrSub = ocrText ? ocrText.slice(0, 100) : '';
+    return computeHash(`${title || ''}_${len}_${s1}_${s2}_${s3}_${s4}_${s5}_${ocrSub}`);
   }
 
   async function extractCurrentContent() {
@@ -685,7 +916,8 @@
     }
 
     const title = getCurrentPageTitle(contentDoc);
-    const shotResult = await captureReaderScreenshot(title, '');
+    const ocrText = extractStructuredOCRText(contentDoc);
+    const shotResult = await captureReaderScreenshot(title, ocrText);
     
     if (shotResult) {
       if (typeof shotResult === 'string') {
@@ -697,11 +929,13 @@
       }
     }
 
-    const sig = generateContentSignature(title, image);
+    const sig = generateContentSignature(title, image, ocrText);
 
     return {
       title: title || `Halaman ${state.pages.length + 1}`,
       image: image,
+      ocrText: ocrText,
+      text: ocrText,
       width: imageWidth,
       height: imageHeight,
       timestamp: new Date().toISOString(),
@@ -710,7 +944,7 @@
   }
 
   function addPageIfNew(extracted) {
-    if (!extracted || !extracted.image) {
+    if (!extracted || (!extracted.image && !extracted.ocrText)) {
       return false;
     }
 
@@ -883,6 +1117,7 @@
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     (async () => {
       if (request.action === 'GET_STATUS') {
+        const { totalChars, totalWords } = calculateTotalOCRStats();
         sendResponse({
           isScanning: state.isScanning,
           pageCount: state.pages.length,
@@ -890,7 +1125,10 @@
           customLabel: state.customLabel || '',
           pages: state.pages,
           delaySeconds: state.delaySeconds,
-          maxPages: state.maxPages
+          maxPages: state.maxPages,
+          activeTab: state.activeTab,
+          totalChars,
+          totalWords
         });
         return;
       }

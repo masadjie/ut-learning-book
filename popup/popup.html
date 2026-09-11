@@ -12,7 +12,7 @@
       <div class="logo">
         <img src="../icons/logo.png" class="logo-img" alt="Logo" style="width: 26px; height: 26px; border-radius: 6px; object-fit: cover; box-shadow: 0 1px 3px rgba(0,0,0,0.15);">
         <div class="logo-text">
-          <h1>UT Book Scanner <span style="font-size: 11px; font-weight: 500; opacity: 0.85;">v1.0.0</span></h1>
+          <h1>UT Book Scanner <span style="font-size: 11px; font-weight: 500; opacity: 0.85;">v1.1.0</span></h1>
           <span class="sub">by Adjie Kurniawan</span>
         </div>
       </div>
@@ -20,6 +20,12 @@
     </header>
 
     <main class="main">
+      <!-- Dual Tab Navigation -->
+      <div class="tabs-nav">
+        <button class="tab-btn active" data-tab="scan" id="tab-btn-scan">📸 Scan Pages</button>
+        <button class="tab-btn" data-tab="ocr" id="tab-btn-ocr">📝 Pages to OCR</button>
+      </div>
+
       <!-- Info Card -->
       <div class="card book-info">
         <div class="info-row">
@@ -36,61 +42,108 @@
         </div>
       </div>
 
-      <!-- Controls -->
-      <div class="card controls-card">
-        <div class="form-group">
-          <label for="doc-label-input" class="form-label">🏷️ Nama Label / Judul File:</label>
-          <input type="text" id="doc-label-input" class="text-input" placeholder="Contoh: Modul 1 - Matriks" autocomplete="off" spellcheck="false">
-        </div>
-
-        <div class="form-group">
-          <label for="max-pages-select" class="form-label">🎯 Batas Halaman (Auto-Stop):</label>
-          <select id="max-pages-select" class="select-input">
-            <option value="5">Maksimal 5 Halaman</option>
-            <option value="10">Maksimal 10 Halaman</option>
-            <option value="15" selected>Maksimal 15 Halaman (Direkomendasikan)</option>
-            <option value="25">Maksimal 25 Halaman</option>
-            <option value="50">Maksimal 50 Halaman</option>
-            <option value="0">Semua Halaman (Tanpa Batas)</option>
-            <option value="custom">✏️ Kustom / Tentukan Manual...</option>
-          </select>
-          <input type="number" id="max-pages-custom-input" class="text-input ut-hidden" min="1" max="1000" placeholder="Ketik jumlah halaman (misal: 12)" style="margin-top: 6px;">
-        </div>
-
-        <div class="form-group">
-          <div class="slider-row">
-            <label for="delay-input" class="form-label" style="margin-bottom: 0;">⏱️ Jeda per Halaman:</label>
-            <span id="delay-display" class="delay-val">2.5s</span>
+      <!-- Tab Pane 1: Scan Pages -->
+      <div class="tab-pane active" id="pane-scan">
+        <!-- Controls -->
+        <div class="card controls-card">
+          <div class="form-group">
+            <label for="doc-label-input" class="form-label">🏷️ Nama Label / Judul File:</label>
+            <input type="text" id="doc-label-input" class="text-input" placeholder="Contoh: Modul 1 - Matriks" autocomplete="off" spellcheck="false">
           </div>
-          <input type="range" id="delay-input" min="1.0" max="6.0" step="0.5" value="2.5">
+
+          <div class="form-group">
+            <label for="max-pages-select" class="form-label">🎯 Batas Halaman (Auto-Stop):</label>
+            <select id="max-pages-select" class="select-input">
+              <option value="5">Maksimal 5 Halaman</option>
+              <option value="10">Maksimal 10 Halaman</option>
+              <option value="15" selected>Maksimal 15 Halaman (Direkomendasikan)</option>
+              <option value="25">Maksimal 25 Halaman</option>
+              <option value="50">Maksimal 50 Halaman</option>
+              <option value="0">Semua Halaman (Tanpa Batas)</option>
+              <option value="custom">✏️ Kustom / Tentukan Manual...</option>
+            </select>
+            <input type="number" id="max-pages-custom-input" class="text-input ut-hidden" min="1" max="1000" placeholder="Ketik jumlah halaman (misal: 12)" style="margin-top: 6px;">
+          </div>
+
+          <div class="form-group">
+            <div class="slider-row">
+              <label for="delay-input" class="form-label" style="margin-bottom: 0;">⏱️ Jeda per Halaman:</label>
+              <span id="delay-display" class="delay-val">2.5s</span>
+            </div>
+            <input type="range" id="delay-input" min="1.0" max="6.0" step="0.5" value="2.5">
+          </div>
+
+          <div class="btn-group">
+            <button id="btn-start" class="btn btn-primary">
+              ▶️ Mulai Auto-Scan
+            </button>
+            <button id="btn-stop" class="btn btn-danger" style="display: none;">
+              ⏹️ Stop Auto-Scan
+            </button>
+            <button id="btn-capture" class="btn btn-secondary">
+              📸 Scan Halaman Ini
+            </button>
+          </div>
         </div>
 
-        <div class="btn-group">
-          <button id="btn-start" class="btn btn-primary">
-            ▶️ Mulai Auto-Scan
-          </button>
-          <button id="btn-stop" class="btn btn-danger" style="display: none;">
-            ⏹️ Stop Auto-Scan
-          </button>
-          <button id="btn-capture" class="btn btn-secondary">
-            📸 Scan Halaman Ini
-          </button>
+        <!-- Export Actions -->
+        <div class="card export-card">
+          <div class="section-title">
+            <span>Ekspor Dokumen (Landscape HD)</span>
+          </div>
+
+          <div class="btn-row">
+            <button id="btn-export-doc" class="btn btn-primary" style="padding: 10px;">
+              📄 Unduh Word (.docx)
+            </button>
+            <button id="btn-export-pdf" class="btn btn-secondary" style="padding: 10px;">
+              📑 Cetak / Simpan PDF
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- Export Actions -->
-      <div class="card export-card">
-        <div class="section-title">
-          <span>Ekspor Dokumen (Landscape HD)</span>
+      <!-- Tab Pane 2: Pages to OCR -->
+      <div class="tab-pane" id="pane-ocr">
+        <div class="card ocr-stats-card">
+          <div class="ocr-stat-row">
+            <div class="ocr-stat-chip">
+              <span class="val" id="popup-ocr-words">0</span>
+              <span class="lbl">Total Kata OCR</span>
+            </div>
+            <div class="ocr-stat-chip">
+              <span class="val" id="popup-ocr-chars">0</span>
+              <span class="lbl">Total Karakter</span>
+            </div>
+          </div>
         </div>
 
-        <div class="btn-row">
-          <button id="btn-export-doc" class="btn btn-primary" style="padding: 10px;">
-            📄 Unduh Word (.docx)
+        <div class="card controls-card">
+          <button id="btn-copy-ocr" class="btn btn-llm btn-full" style="margin-bottom: 8px; font-weight: bold;">
+            📋 Salin Teks OCR (LLM Ready)
           </button>
-          <button id="btn-export-pdf" class="btn btn-secondary" style="padding: 10px;">
-            📑 Cetak / Simpan PDF
-          </button>
+          <div class="btn-row">
+            <button id="btn-start-ocr" class="btn btn-success">
+              ▶️ Auto-Scan OCR
+            </button>
+            <button id="btn-capture-ocr" class="btn btn-secondary">
+              📝 OCR Halaman Ini
+            </button>
+          </div>
+        </div>
+
+        <div class="card export-card">
+          <div class="section-title">
+            <span>Ekspor OCR & Markdown</span>
+          </div>
+          <div class="btn-row">
+            <button id="btn-export-doc-ocr" class="btn btn-primary" style="padding: 10px;">
+              📄 Word (.docx + OCR)
+            </button>
+            <button id="btn-download-md" class="btn btn-secondary" style="padding: 10px;">
+              📝 Unduh .md
+            </button>
+          </div>
         </div>
       </div>
 

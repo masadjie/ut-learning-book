@@ -11,8 +11,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/masadjie/ut-learning-book/releases/tag/v1.0.0"><img src="https://img.shields.io/badge/release-v1.0.0-blue.svg?style=for-the-badge&logo=github" alt="Release v1.0.0" /></a>
+  <a href="https://github.com/masadjie/ut-learning-book/releases/tag/v1.1.0"><img src="https://img.shields.io/badge/release-v1.1.0-blue.svg?style=for-the-badge&logo=github" alt="Release v1.1.0" /></a>
   <img src="https://img.shields.io/badge/Manifest-V3-success.svg?style=for-the-badge&logo=googlechrome" alt="Manifest V3" />
+  <img src="https://img.shields.io/badge/Smart%20OCR-Enabled-emerald.svg?style=for-the-badge&logo=google" alt="Smart OCR Enabled" />
   <img src="https://img.shields.io/badge/Platform-Chrome%20Extension-orange.svg?style=for-the-badge&logo=googlechrome" alt="Platform" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-purple.svg?style=for-the-badge" alt="License" /></a>
 </p>
@@ -21,11 +22,36 @@
 
 ## 📌 Sekilas Tentang Proyek
 
-Membaca modul digital pada platform Ruang Baca Virtual (RBV) Universitas Terbuka yang berbasis **Kotobee Reader** sering kali membutuhkan akses dokumen offline untuk kebutuhan belajar mandiri, merangkum materi kuliah, atau membuat arsip rujukan tugas.
+Membaca modul digital pada platform Ruang Baca Virtual (RBV) Universitas Terbuka yang berbasis **Kotobee Reader** sering kali membutuhkan akses dokumen offline dan ekstraksi teks yang bersih untuk kebutuhan belajar mandiri, merangkum materi kuliah, atau membuat arsip rujukan tugas.
 
-**UT Book Scanner** adalah ekstensi browser Google Chrome (*Manifest V3*) modern yang mengotomatisasi proses pengarsipan halaman modul digital secara presisi, beresolusi tinggi, dan siap diekspor langsung ke format **Microsoft Word (.docx A4 Landscape)** serta **PDF (Print Layout Ready)** dalam hitungan detik.
+**UT Book Scanner** adalah ekstensi browser Google Chrome (*Manifest V3*) modern yang mengotomatisasi proses pengarsipan halaman modul digital secara presisi, beresolusi tinggi, dan dilengkapi **Smart OCR Engine** untuk mengekstraksi teks terstruktur langsung ke format **Microsoft Word (.docx A4 Landscape + Teks)**, **Markdown (.md)**, serta **PDF (Print Layout Ready)**.
 
-Dokumen hasil ekspor dirancang rapi dan berstandar OpenXML sehingga sangat ideal untuk langsung diunggah sebagai bahan sumber (*knowledge source*) ke ekosistem **Google LLM (Google NotebookLM, Gemini Pro, & Google AI Studio)** untuk asistensi belajar cerdas berbasis AI.
+Teks dan dokumen hasil ekspor dirancang rapi dan berstandar OpenXML / Markdown terstruktur sehingga sangat ideal untuk langsung diunggah sebagai bahan sumber (*knowledge source*) atau disalin 1-klik ke ekosistem **Google LLM (Google NotebookLM, Gemini Pro, & Claude / ChatGPT)** untuk asistensi belajar cerdas berbasis AI.
+
+---
+
+## 🎛️ Dua Menu Utama (Dual Mode)
+
+Ekstensi ini kini dilengkapi sakelar navigasi ganda yang fleksibel:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  [ 📸 Scan Pages ]          │      [ 📝 Pages to OCR ]      │
+└─────────────────────────────────────────────────────────────┘
+```
+
+1. **📸 Scan Pages (Auto-Scan HD & Dokumen Word):**
+   - Menangkap seluruh area modul secara visual beresolusi tinggi (*HD Landscape*).
+   - Memotong (*cropping*) toolbar & navbar reader secara presisi.
+   - Ekspor langsung ke file **Word (.docx A4 Landscape)** & **PDF Cetak**.
+   - Dilengkapi pengaturan batas halaman otomatis (5, 10, 15, 25, 50, atau manual/kustom) dan slider jeda kecepatan.
+
+2. **📝 Pages to OCR (Smart OCR Mode & LLM Prompt Ready):**
+   - Mengekstrak teks dokumen modul secara instan dan berurutan dari struktur reader DOM & Canvas.
+   - Mempertahankan hierarki judul (`#`, `##`), paragraf, poin *bullet*, dan tabel materi modul.
+   - **Tombol Salin Cepat 1-Klik (`📋 Salin Teks OCR (LLM Ready)`)**: Langsung menyalin seluruh materi modul ke clipboard untuk di-*paste* ke Google Gemini / NotebookLM / ChatGPT.
+   - Ekspor file **Markdown (.md)** murni atau dokumen **Word (.docx + OCR)** yang berisi tangkapan visual bersanding dengan teks hasil OCR yang dapat diedit.
+   - Penghitung kata (*word counter*) dan karakter secara *real-time*.
 
 ---
 
@@ -33,11 +59,13 @@ Dokumen hasil ekspor dirancang rapi dan berstandar OpenXML sehingga sangat ideal
 
 | Fitur | Deskripsi |
 | :--- | :--- |
+| 📝 **Smart DOM & Canvas OCR Engine** | Ekstraksi teks berakurasi tinggi dengan struktur paragraf, bab, poin, dan tabel yang dipertahankan secara rapi. |
+| 📋 **1-Click Copy Teks (LLM Ready)** | Salin ribuan kata materi modul ke clipboard dalam format Markdown siap prompt ke Google Gemini / ChatGPT. |
 | 🚀 **Auto-Scan & Smart Page Detection** | Menangkap halaman aktif secara otomatis dan berpindah ke halaman berikutnya dengan simulasi navigasi multi-event cerdas. |
-| 🤖 **AI / Google LLM Knowledge Ready** | Dokumen `.docx` & `.pdf` siap diimpor langsung ke Google NotebookLM atau Gemini sebagai sumber kajian modul otomatis. |
+| 🤖 **AI / Google LLM Knowledge Ready** | Dokumen `.docx`, `.md`, & `.pdf` siap diimpor langsung ke Google NotebookLM atau Gemini sebagai sumber kajian modul otomatis. |
 | 🎯 **Fleksibilitas Batas Halaman** | Pilihan kuota instan (5, 10, 15, 25, 50, Semua) atau **Input Kustom** untuk menentukan jumlah halaman manual sesuai kebutuhan. |
 | 🏷️ **Custom File & Title Labeling** | Berikan judul modul kustom yang otomatis disematkan ke sampul dokumen dan nama file unduhan. |
-| 📄 **Word (.docx) Landscape HD** | Dokumen Word OpenXML murni berorientasi *A4 Landscape*, menjaga proporsi materi tanpa terpotong atau blur. |
+| 📄 **Word (.docx) Landscape HD + OCR** | Dokumen Word OpenXML murni berorientasi *A4 Landscape*, memadukan screenshot HD dan teks OCR yang dapat disalin. |
 | 📑 **Direct Save / Print PDF** | Sekali klik untuk membuka layout cetak siap simpan ke format PDF di browser. |
 | 🎨 **Floating Transparent Widget** | Widget kontrol melayang yang *draggable*, dapat di-minimize menjadi ikon badge transparan yang tidak mengganggu area baca. |
 | ⚡ **Zero-Lag & Anti-Duplikasi** | Dilengkapi algoritma multi-chunk hash signature untuk memastikan setiap halaman tersimpan akurat tanpa duplikasi. |
@@ -46,24 +74,26 @@ Dokumen hasil ekspor dirancang rapi dan berstandar OpenXML sehingga sangat ideal
 
 ## 🧠 Integrasi dengan Google LLM & NotebookLM
 
-Dokumen Word (`.docx`) dan PDF yang dihasilkan oleh **UT Book Scanner** dapat langsung dijadikan sumber pengetahuan (*grounded source*) untuk asisten AI Google:
+Dokumen Word (`.docx`), Markdown (`.md`), dan teks OCR yang disalin langsung dari **UT Book Scanner** dapat langsung dijadikan sumber pengetahuan (*grounded source*) untuk asisten AI Google:
 
 ```mermaid
 graph LR
-    A[Modul RBV UT] --> B[UT Book Scanner]
-    B --> C[Export .docx / .pdf]
-    C --> D[Import ke Google NotebookLM / Gemini]
-    D --> E[Tanya Jawab Modul, Rangkuman & Kuis Otomatis]
+    A[Modul RBV UT] --> B[UT Book Scanner v1.1.0]
+    B --> C1[📋 Salin Teks OCR]
+    B --> C2[📄 Export .docx / .md]
+    C1 --> D[Prompt Gemini / Claude / ChatGPT]
+    C2 --> E[Add Source ke Google NotebookLM]
+    D --> F[Analisis & Rangkuman Cerdas]
+    E --> F
 ```
 
 ### Langkah Mudah Menggunakan sebagai Sumber Google LLM:
-1. **Ekspor Modul:** Scan modul yang diinginkan menggunakan **UT Book Scanner** lalu unduh sebagai file `.docx` atau simpan sebagai `.pdf`.
-2. **Buka Google NotebookLM / Gemini:** Kunjungi [Google NotebookLM](https://notebooklm.google.com/) atau [Google AI Studio](https://aistudio.google.com/).
-3. **Upload Sumber (Add Source):** Buat Notebook baru, klik **Add Source** ➡️ pilih **Upload Document** ➡️ pilih file `.docx` / `.pdf` hasil scan Anda.
-4. **Mulai Belajar dengan AI:**
-   - 💬 *Buatkan ringkasan konsep utama dari Modul 1 ini.*
-   - ❓ *Buatkan 10 latihan soal pilihan ganda beserta pembahasannya berdasarkan materi ini.*
-   - 🎧 *Generate Audio Overview (podcast diskusi modul) secara instan.*
+1. **Opsi 1 (Salin Teks Instan):** Klik tab **📝 Pages to OCR**, lakukan scan, lalu klik tombol **📋 Salin Teks OCR (LLM Ready)**. Buka [Google Gemini](https://gemini.google.com/) dan *paste* langsung teks materi dengan prompt belajar.
+2. **Opsi 2 (Upload File Dokumen):** Unduh file `.docx` atau `.md`, buka [Google NotebookLM](https://notebooklm.google.com/), buat Notebook baru dan klik **Add Source** ➡️ pilih file hasil scan.
+3. **Mulai Belajar dengan AI:**
+   - 💬 *Buatkan ringkasan konsep utama dan peta konsep dari Modul ini.*
+   - ❓ *Buatkan 10 latihan soal pilihan ganda beserta pembahasan dan kunci jawaban berdasarkan materi modul ini.*
+   - 🎧 *Generate Audio Overview (podcast interaktif diskusi modul) secara instan.*
 
 ---
 
@@ -97,10 +127,10 @@ Ekstensi ini dapat dipasang secara langsung di Google Chrome (*atau browser berb
 
 ```mermaid
 graph LR
-    A[Buka Kotobee UT] --> B[Set Label & Halaman]
-    B --> C[Klik Mulai Auto-Scan]
-    C --> D[Scan Berjalan Otomatis]
-    D --> E[Ekspor ke Word / PDF]
+    A[Buka Kotobee UT] --> B[Pilih Tab Scan / OCR]
+    B --> C[Set Label & Batas Halaman]
+    C --> D[Klik Mulai Auto-Scan]
+    D --> E[Salin Teks OCR / Ekspor Word]
 ```
 
 1. Buka buku atau modul yang ingin dipelajari di [Kotobee Reader UT](https://univterbuka.kotobee.com/).
