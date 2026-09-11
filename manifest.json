@@ -1,0 +1,57 @@
+{
+  "manifest_version": 3,
+  "name": "UT Book Scanner By Adjie Kurniawan",
+  "version": "1.0.0",
+  "author": "Adjie Kurniawan",
+  "description": "Auto scan, extract, and export Universitas Terbuka Kotobee digital books into Word and LLM-ready prompts. Created by Adjie Kurniawan.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "UT Book Auto-Scanner",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background/service-worker.js"
+  },
+  "permissions": [
+    "storage",
+    "tabs",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>",
+    "*://*.kotobee.com/*",
+    "*://univterbuka.kotobee.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.kotobee.com/*",
+        "*://univterbuka.kotobee.com/*"
+      ],
+      "js": [
+        "libs/exporter.js",
+        "content/content.js"
+      ],
+      "css": [
+        "content/content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/*"],
+      "matches": ["*://*.kotobee.com/*", "*://univterbuka.kotobee.com/*"]
+    }
+  ]
+}

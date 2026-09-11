@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UT Book Scanner</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="logo">
+        <img src="../icons/logo.png" class="logo-img" alt="Logo" style="width: 26px; height: 26px; border-radius: 6px; object-fit: cover; box-shadow: 0 1px 3px rgba(0,0,0,0.15);">
+        <div class="logo-text">
+          <h1>UT Book Scanner <span style="font-size: 11px; font-weight: 500; opacity: 0.85;">v1.0.0</span></h1>
+          <span class="sub">by Adjie Kurniawan</span>
+        </div>
+      </div>
+      <div id="status-badge" class="badge idle">IDLE</div>
+    </header>
+
+    <main class="main">
+      <!-- Info Card -->
+      <div class="card book-info">
+        <div class="info-row">
+          <span class="label">Judul Modul:</span>
+          <span class="value" id="book-title">Mendeteksi reader...</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Metode Ekstraksi:</span>
+          <span class="value" style="font-family: monospace; font-weight: 700; color: #0284c7; letter-spacing: 2px;">*****</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Total Terkumpul:</span>
+          <span class="value highlight" id="page-count">0 Bagian</span>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="card controls-card">
+        <div class="form-group">
+          <label for="doc-label-input" class="form-label">🏷️ Nama Label / Judul File:</label>
+          <input type="text" id="doc-label-input" class="text-input" placeholder="Contoh: Modul 1 - Matriks" autocomplete="off" spellcheck="false">
+        </div>
+
+        <div class="form-group">
+          <label for="max-pages-select" class="form-label">🎯 Batas Halaman (Auto-Stop):</label>
+          <select id="max-pages-select" class="select-input">
+            <option value="5">Maksimal 5 Halaman</option>
+            <option value="10">Maksimal 10 Halaman</option>
+            <option value="15" selected>Maksimal 15 Halaman (Direkomendasikan)</option>
+            <option value="25">Maksimal 25 Halaman</option>
+            <option value="50">Maksimal 50 Halaman</option>
+            <option value="0">Semua Halaman (Tanpa Batas)</option>
+            <option value="custom">✏️ Kustom / Tentukan Manual...</option>
+          </select>
+          <input type="number" id="max-pages-custom-input" class="text-input ut-hidden" min="1" max="1000" placeholder="Ketik jumlah halaman (misal: 12)" style="margin-top: 6px;">
+        </div>
+
+        <div class="form-group">
+          <div class="slider-row">
+            <label for="delay-input" class="form-label" style="margin-bottom: 0;">⏱️ Jeda per Halaman:</label>
+            <span id="delay-display" class="delay-val">2.5s</span>
+          </div>
+          <input type="range" id="delay-input" min="1.0" max="6.0" step="0.5" value="2.5">
+        </div>
+
+        <div class="btn-group">
+          <button id="btn-start" class="btn btn-primary">
+            ▶️ Mulai Auto-Scan
+          </button>
+          <button id="btn-stop" class="btn btn-danger" style="display: none;">
+            ⏹️ Stop Auto-Scan
+          </button>
+          <button id="btn-capture" class="btn btn-secondary">
+            📸 Scan Halaman Ini
+          </button>
+        </div>
+      </div>
+
+      <!-- Export Actions -->
+      <div class="card export-card">
+        <div class="section-title">
+          <span>Ekspor Dokumen (Landscape HD)</span>
+        </div>
+
+        <div class="btn-row">
+          <button id="btn-export-doc" class="btn btn-primary" style="padding: 10px;">
+            📄 Unduh Word (.docx)
+          </button>
+          <button id="btn-export-pdf" class="btn btn-secondary" style="padding: 10px;">
+            📑 Cetak / Simpan PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- Preview Section -->
+      <div class="card preview-card">
+        <div class="preview-header">
+          <span class="section-title">Preview Bagian Terkumpul</span>
+          <button id="btn-clear" class="btn-text text-danger">Hapus Data</button>
+        </div>
+        <div id="preview-list" class="preview-list">
+          <div class="empty-state">Belum ada materi yang discan. Buka modul di Kotobee dan klik Mulai Auto-Scan.</div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <span>UT Book Scanner by Adjie Kurniawan</span>
+    </footer>
+  </div>
+
+  <script src="../libs/exporter.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
