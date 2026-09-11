@@ -620,6 +620,36 @@
     });
   }
 
+  function getCurrentPageTitle(contentDoc) {
+    const headerEl = document.querySelector('.header, header, [class*="header"], [class*="navbar"], [class*="topbar"], .app-header');
+    if (headerEl) {
+      const items = Array.from(headerEl.querySelectorAll('span, div, h1, h2, h3, p'));
+      for (const el of items) {
+        const txt = el.innerText?.trim();
+        if (txt && (/^(Halaman|Modul|Tinjauan|Bab|Kegiatan)/i.test(txt) || (txt.length < 50 && txt.includes('.')))) {
+          if (!txt.includes('Library') && !txt.includes('Menu')) {
+            return txt;
+          }
+        }
+      }
+    }
+
+    const activeToc = document.querySelector('.toc-item.active, .chapter-list li.active, [class*="active"][class*="item"], [class*="active"]');
+    if (activeToc && activeToc.innerText.trim().length > 0 && activeToc.innerText.trim().length < 60) {
+      const t = activeToc.innerText.trim();
+      if (!t.includes('Table of Contents')) return t;
+    }
+
+    if (contentDoc) {
+      const h = contentDoc.querySelector('h1, h2, .chapter-title, .title');
+      if (h && h.innerText?.trim()) {
+        return h.innerText.trim();
+      }
+    }
+
+    return `Halaman ${state.pages.length + 1}`;
+  }
+
   function generateContentSignature(title, image) {
     if (!image) return computeHash(title || '');
     const len = image.length;

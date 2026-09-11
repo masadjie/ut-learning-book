@@ -5,7 +5,8 @@
 </p>
 
 <p align="center">
-  <b>Automated High-Resolution Page Capture & Document Exporter for Universitas Terbuka (Kotobee Reader)</b><br>
+  <b>Automated High-Resolution Page Capture & Document Exporter</b><br>
+  <b>for Universitas Terbuka (Kotobee Reader)</b><br>
   <sub>Dirancang & Dikembangkan oleh <b>Adjie Kurniawan</b></sub>
 </p>
 
@@ -24,6 +25,8 @@ Membaca modul digital pada platform Ruang Baca Virtual (RBV) Universitas Terbuka
 
 **UT Book Scanner** adalah ekstensi browser Google Chrome (*Manifest V3*) modern yang mengotomatisasi proses pengarsipan halaman modul digital secara presisi, beresolusi tinggi, dan siap diekspor langsung ke format **Microsoft Word (.docx A4 Landscape)** serta **PDF (Print Layout Ready)** dalam hitungan detik.
 
+Dokumen hasil ekspor dirancang rapi dan berstandar OpenXML sehingga sangat ideal untuk langsung diunggah sebagai bahan sumber (*knowledge source*) ke ekosistem **Google LLM (Google NotebookLM, Gemini Pro, & Google AI Studio)** untuk asistensi belajar cerdas berbasis AI.
+
 ---
 
 ## ✨ Fitur Unggulan
@@ -31,12 +34,36 @@ Membaca modul digital pada platform Ruang Baca Virtual (RBV) Universitas Terbuka
 | Fitur | Deskripsi |
 | :--- | :--- |
 | 🚀 **Auto-Scan & Smart Page Detection** | Menangkap halaman aktif secara otomatis dan berpindah ke halaman berikutnya dengan simulasi navigasi multi-event cerdas. |
+| 🤖 **AI / Google LLM Knowledge Ready** | Dokumen `.docx` & `.pdf` siap diimpor langsung ke Google NotebookLM atau Gemini sebagai sumber kajian modul otomatis. |
 | 🎯 **Fleksibilitas Batas Halaman** | Pilihan kuota instan (5, 10, 15, 25, 50, Semua) atau **Input Kustom** untuk menentukan jumlah halaman manual sesuai kebutuhan. |
 | 🏷️ **Custom File & Title Labeling** | Berikan judul modul kustom yang otomatis disematkan ke sampul dokumen dan nama file unduhan. |
 | 📄 **Word (.docx) Landscape HD** | Dokumen Word OpenXML murni berorientasi *A4 Landscape*, menjaga proporsi materi tanpa terpotong atau blur. |
 | 📑 **Direct Save / Print PDF** | Sekali klik untuk membuka layout cetak siap simpan ke format PDF di browser. |
 | 🎨 **Floating Transparent Widget** | Widget kontrol melayang yang *draggable*, dapat di-minimize menjadi ikon badge transparan yang tidak mengganggu area baca. |
 | ⚡ **Zero-Lag & Anti-Duplikasi** | Dilengkapi algoritma multi-chunk hash signature untuk memastikan setiap halaman tersimpan akurat tanpa duplikasi. |
+
+---
+
+## 🧠 Integrasi dengan Google LLM & NotebookLM
+
+Dokumen Word (`.docx`) dan PDF yang dihasilkan oleh **UT Book Scanner** dapat langsung dijadikan sumber pengetahuan (*grounded source*) untuk asisten AI Google:
+
+```mermaid
+graph LR
+    A[Modul RBV UT] --> B[UT Book Scanner]
+    B --> C[Export .docx / .pdf]
+    C --> D[Import ke Google NotebookLM / Gemini]
+    D --> E[Tanya Jawab Modul, Rangkuman & Kuis Otomatis]
+```
+
+### Langkah Mudah Menggunakan sebagai Sumber Google LLM:
+1. **Ekspor Modul:** Scan modul yang diinginkan menggunakan **UT Book Scanner** lalu unduh sebagai file `.docx` atau simpan sebagai `.pdf`.
+2. **Buka Google NotebookLM / Gemini:** Kunjungi [Google NotebookLM](https://notebooklm.google.com/) atau [Google AI Studio](https://aistudio.google.com/).
+3. **Upload Sumber (Add Source):** Buat Notebook baru, klik **Add Source** ➡️ pilih **Upload Document** ➡️ pilih file `.docx` / `.pdf` hasil scan Anda.
+4. **Mulai Belajar dengan AI:**
+   - 💬 *Buatkan ringkasan konsep utama dari Modul 1 ini.*
+   - ❓ *Buatkan 10 latihan soal pilihan ganda beserta pembahasannya berdasarkan materi ini.*
+   - 🎧 *Generate Audio Overview (podcast diskusi modul) secara instan.*
 
 ---
 
